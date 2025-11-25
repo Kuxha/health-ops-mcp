@@ -13,6 +13,10 @@ Exposes MCP tools that let an agent:
 
 All data is synthetic. A real EMR or HR/payroll system could sit behind the same interfaces with minimal changes to the tool signatures.
 
+## Demo video 
+
+Link : youtube.com/watch?v=Me-UrRhvh_A&feature=youtu.be
+
 ## Running
 
 From the project root:
