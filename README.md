@@ -1,63 +1,92 @@
-# health-ops-mcp
+# Health Ops MCP
 
-An MCP server that models staffing and compliance agents over a synthetic home-care workforce dataset.
+A Model Context Protocol (MCP) server that demonstrates **autonomous workforce orchestration** for post-acute care.
 
-## What it does
+This project models a "System of Action" architecture. It runs an AI agent alongside the EMR to automate scheduling, detect conflicts, and enforce compliance guardrails.
 
-Exposes MCP tools that let an agent:
+## Demo
 
-- List open RN shifts for a location in a time window.
-- Suggest caregiver assignments based on role, skills, and day/night preference.
-- Assign a caregiver to an open shift.
-- List caregivers with expiring compliance items (for example licenses).
+**[Watch the 5-minute Technical Deep Dive](https://youtu.be/Me-UrRhvh_A)**
+*(Jump to 2:22 for the Agent Staffing Logic)*
 
-All data is synthetic. A real EMR or HR/payroll system could sit behind the same interfaces with minimal changes to the tool signatures.
+![Agent Control Plane Dashboard](dashboard.png)
 
-## Demo video 
+## Key Capabilities
 
-Link : youtube.com/watch?v=Me-UrRhvh_A&feature=youtu.be
+This system exposes standard MCP tools that allow an LLM to manage a synthetic home-care workforce:
 
-## Running
+- **Intelligent Staffing**: Suggests assignments based on role (RN/LPN), skills (Wound Care), and shift preferences (Day/Night).
+- **Conflict Detection**: Prevents double-booking by validating schedule overlaps before assignment.
+- **Compliance Guardrails**: Proactively flags expiring licenses (e.g., "RN License expires in <30 days").
+- **Human-in-the-Loop**: A Streamlit Control Plane to visualize and approve agent actions.
 
-From the project root:
+## Architecture
 
-1. Activate the virtualenv  
-   - source .venv/bin/activate
+The project consists of two components:
+1. **MCP Server** (`server.py`): The backend logic and in-memory data store.
+2. **Control Plane** (`dashboard.py`): A Streamlit UI for humans to audit agent decisions.
 
-2. Start the MCP dev server  
-   - mcp dev health_ops_mcp/server.py
+## Quick Start
 
-This starts the MCP server and opens the MCP Inspector in your browser.
+### Prerequisites
+- Python 3.12+
+- `uv` (recommended) or `pip`
 
-## Example flow (from MCP Inspector)
+### 1. Install Dependencies
 
-1. Call "list_open_shifts"  
-   - Arguments:  
-     - location_id = "loc_nyc"  
-     - from_ts = "2020-01-01T00:00:00"  
-     - to_ts   = "2030-01-01T00:00:00"  
-   - Effect: returns open RN shifts at the NYC Home Care location.
+```bash
+# Using uv (Recommended)
+uv sync
 
-2. Call "suggest_assignments"  
-   - Arguments:  
-     - location_id = "loc_nyc"  
-     - from_ts = "2020-01-01T00:00:00"  
-     - to_ts   = "2030-01-01T00:00:00"  
-     - strategy = "fair_load"  
-   - Effect: proposes caregivers for the open shifts, preferring those whose shift preferences (day or night) match the shift start time, while still enforcing role and skill match.
+# OR using pip
+pip install -r requirements.txt
+```
 
-3. Call "assign_shift"  
-   - Example arguments:  
-     - shift_id = "shift_1"  
-     - caregiver_id = "cg_beth"  
-     - source = "agent"  
-   - Effect: marks shift_1 as "assigned" to cg_beth in the synthetic dataset.
+### 2. Run the Control Plane (Dashboard)
+The dashboard visualizes the schedule and allows you to reset the simulation data.
 
-4. Call "list_open_shifts" again  
-   - Use the same arguments as in step 1.  
-   - Effect: shift_1 no longer appears as open; only remaining open shifts are listed.
+```bash
+uv run streamlit run health_ops_mcp/dashboard.py
+```
+*Access at: http://localhost:8501*
 
-5. Call "list_expiring_compliance"  
-   - Arguments:  
-     - days_ahead = 30  
-   - Effect: returns caregivers with compliance items (for example licenses) expiring in the next 30 days, so an agent could trigger notifications or adjust scheduling.
+### 3. Run the MCP Server (for Agent Integration)
+To connect this server to an LLM client (like Claude Desktop or a custom Agent Builder):
+
+```bash
+mcp dev health_ops_mcp/server.py
+```
+
+## Example Workflow
+
+Once the server is running, an Agent can execute the following loop:
+
+1. **Context Gathering**
+   - Call `list_open_shifts(location="loc_nyc")`
+   - *Result*: Returns unassigned shifts requiring specific skills.
+
+2. **Reasoning**
+   - Call `suggest_assignments(strategy="fair_load")`
+   - *Result*: "Assign Nurse Beth (matches Skill: Pediatrics + Shift: Night)."
+
+3. **Action**
+   - Call `assign_shift(shift_id="shift_1", caregiver_id="cg_beth")`
+   - *Result*: Updates the schedule and returns the action source.
+
+4. **Audit**
+   - Call `list_expiring_compliance(days_ahead=30)`
+   - *Result*: Returns a list of caregivers who cannot be scheduled next month due to expiring credentials.
+
+## Project Structure
+
+
+```text
+health-ops-mcp/
+├── health_ops_mcp/
+│   ├── dashboard.py    # Streamlit Control Plane (UI)
+│   ├── server.py       # MCP Tool Definitions & Entrypoint
+│   ├── storage.py      # In-Memory Database & Seeding Logic
+│   └── models.py       # Pydantic Schemas
+├── pyproject.toml      # Dependency Config
+└── README.md
+```
