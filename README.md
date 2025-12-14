@@ -9,7 +9,7 @@ This project models a "System of Action" architecture. It runs an AI agent along
 **[Watch the 5-minute Technical Deep Dive](https://youtu.be/Me-UrRhvh_A)**
 *(Jump to 2:22 for the Agent Staffing Logic)*
 
-![Agent Control Plane Dashboard](dashboard.png)
+![Agent Control Plane Dashboard](assets/dashboard.png)
 
 ## Key Capabilities
 
