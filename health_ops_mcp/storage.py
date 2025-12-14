@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict
 
 from .models import Location, Caregiver, Shift, ComplianceItem
@@ -14,8 +14,8 @@ class InMemoryStore:
         self.compliance: Dict[str, ComplianceItem] = {}
 
     def seed(self) -> None:
-        # Here I seed a couple of locations, caregivers, shifts, and compliance items
-        now = datetime.utcnow()
+        # SENIOR FIX: Use timezone-aware UTC clock
+        now = datetime.now(timezone.utc)
 
         loc = Location(
             id="loc_nyc",
