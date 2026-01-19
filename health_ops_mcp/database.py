@@ -6,23 +6,24 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from health_ops_mcp.models import Shift, Location, Caregiver, ComplianceItem
 
-# 1. SETUP: Get the secret URL
+# 1. Here we get the url from the environment - connection string basically
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# FIX: DigitalOcean requires SSL. If missing, we force it.
+# FIX: DigitalOcean requires SSL. If missing, we force it. (since we are using digital ocean )
 if DATABASE_URL and "sslmode" not in DATABASE_URL:
     DATABASE_URL += "?sslmode=require"
 
-# Fallback: Use local file if no Cloud DB
+# In case this is not working, we simply add it to a local db
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///local_demo.db"
 
-# 2. ENGINE
+# This is the main part where we create an engine for this session
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base() 
 
-# 3. TABLE
+# Here we add the table for the shifts
+# The main data is added as data (and we have not added more columns)
 class ShiftDB(Base):
     """
     Hybrid storage model for Shifts.
@@ -34,7 +35,7 @@ class ShiftDB(Base):
     status = Column(String)
     data = Column(JSON)
 
-# 4. REPOSITORY
+# This is the prostgres store , which seeds the static data
 class PostgresStore:
     def __init__(self):
         Base.metadata.create_all(bind=engine)
@@ -42,12 +43,12 @@ class PostgresStore:
         self._seed_db_if_empty() # <--- Added this back so you have shifts!
 
     def _seed_static_data(self):
-        # Keeping caregivers in memory for the MVP phase
+        # For the MVP phase we basically keep it all in memory
         self.locations = {}
         self.caregivers = {}
         self.compliance = {}
         
-        # Seed NYC Location
+        # Below we seeds the sample data
         nyc = Location(id="loc_nyc", name="NYC Home Care", timezone="America/New_York")
         self.locations[nyc.id] = nyc
 
@@ -78,7 +79,7 @@ class PostgresStore:
                 )
                 self.save_shift(s)
 
-    # --- Read Operations ---
+    # Here we have the read operations which reads from the db
     def get_shift(self, shift_id):
         with SessionLocal() as db:
             row = db.query(ShiftDB).filter(ShiftDB.id == shift_id).first()
