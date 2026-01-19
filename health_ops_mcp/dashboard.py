@@ -10,7 +10,7 @@ import asyncio
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Now we can safely import our backend logic
-from health_ops_mcp.storage import store
+from health_ops_mcp.database import store
 from health_ops_mcp.server import suggest_assignments, assign_shift
 
 # --- APP CONFIG ---

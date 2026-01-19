@@ -5,7 +5,8 @@ from typing import Any, Dict, List
 
 from mcp.server.fastmcp import FastMCP
 
-from health_ops_mcp.storage import store
+# from health_ops_mcp.storage import store
+from health_ops_mcp.database import store
 from health_ops_mcp.models import Shift, Caregiver
 
 
@@ -137,7 +138,7 @@ async def assign_shift(
 
     shift.caregiver_id = caregiver_id
     shift.status = "assigned"
-
+    store.save_shift(shift)
     return {
         "ok": True,
         "shift": shift.model_dump(),
